@@ -2,6 +2,41 @@
 
 set -e
 
-echo "checking for protoc-gen-gogofaster... "
-echo "failed!"
-exit 1
+get_abs_filepath() {
+  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+build_dir=$(dirname $0)/../build
+
+if [ -z "$GOOS" ]; then
+  echo "GOOS is not set"
+  exit 1
+fi
+
+if [ -z "$GOARCH" ]; then
+  echo "GOARCH is not set"
+  exit 1
+fi
+
+# Ensure that protoc-gen-gogofaster is checked out to the build directory.
+if [ ! -d "$build_dir/sources/gogo-protobuf/src/github.com/gogo/protobuf" ]; then
+  git clone -q git://github.com/gogo/protobuf "$build_dir/sources/gogo-protobuf/src/github.com/gogo/protobuf" > /dev/null
+fi
+
+# Ensure that version v1.1.1 is checked out.
+source_dir=$(get_abs_filepath "$build_dir/sources/gogo-protobuf")
+(
+  cd "$source_dir/src/github.com/gogo/protobuf"
+  if ! git checkout -q v1.1.1 &> /dev/null; then
+    # We may not have the tag so attempt a fetch.
+    git fetch origin
+    git checkout -q v1.1.1 > /dev/null
+  fi
+)
+
+# Build the protoc-gen-gogofaster binary. It should be self contained and have no external dependencies
+# beyond itself.
+GOPATH="$source_dir" go build -o "$build_dir/bin/${GOOS}-${GOARCH}/protoc-gen-gogofaster" github.com/gogo/protobuf/protoc-gen-gogofaster
+
+# Execute the command.
+exec "$build_dir/bin/${GOOS}-${GOARCH}/protoc-gen-gogofaster" "$@"
