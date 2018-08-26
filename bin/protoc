@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if ! type protoc &> /dev/null; then
+  echo "protoc command was not found"
+  exit 1
+fi
+
+REGEX="^libprotoc 3\\.[0-9.]+$"
+version=$(protoc --version)
+if ! [[ $version =~ $REGEX ]]; then
+  echo "protoc must be version 3, found $version"
+  exit 1
+fi
+
+exec protoc "$@"

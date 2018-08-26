@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+echo "checking for protoc-gen-gogofaster... "
+echo "failed!"
+exit 1
