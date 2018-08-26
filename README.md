@@ -1,0 +1,5 @@
+An experiment with handling binary dependencies in a Go project.
+
+Binaries that are used are in the `bin` directory and match the name of the binary we are intending to use. The binary stubs themselves handle the versioning for each individual tool and ensuring that the proper source code is installed. This gives more general freedom to how we want to deal with these dependencies by either vendoring their own source code or installing them from some remote location. The binaries themselves can be cached in the build directory.
+
+The `go:generate` comment in the Go source code just invokes the binary so it doesn't care about what the binary is doing for versioning. For binaries that cannot be installed in a generic method or we want the user to bring their own like `protoc`, we can have an error message or we can just skip running the tool. At the moment, I default to throwing an error when a tool doesn't exist for generate rather than ignoring the generator step, but we could choose the opposite.
